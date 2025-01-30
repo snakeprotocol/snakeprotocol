@@ -1,0 +1,56 @@
+name: Deploy Docs & Extensions # (/documentation and /extensions-site)
+
+on:
+  push:
+    branches:
+      - main
+  
+  pull_request:
+    paths:
+      - 'documentation/**'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout the branch
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: 20 
+
+      - name: Install dependencies and build docs
+        working-directory: ./documentation
+        env:
+          INKEEP_API_KEY: ${{ secrets.INKEEP_API_KEY }}
+          INKEEP_INTEGRATION_ID: ${{ secrets.INKEEP_INTEGRATION_ID }}
+          INKEEP_ORG_ID: ${{ secrets.INKEEP_ORG_ID }}
+        run: |
+          npm install
+          npm run build
+
+      - name: Install dependencies and build extensions-site
+        working-directory: ./extensions-site
+        env:
+          VITE_BASENAME: "/goose/v1/extensions/" # Set the base URL here for the extensions site
+        run: |
+          npm install
+          npm run build
+
+      - name: Combine builds into one directory
+        run: |
+          mkdir combined-build
+          cp -r documentation/build/* combined-build/
+          mkdir -p combined-build/v1/extensions
+          cp -r extensions-site/build/client/* combined-build/v1/extensions/
+
+      - name: Deploy to /gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: combined-build
+          destination_dir: . # Deploy the site to the root /goose directory
+      
