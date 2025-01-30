@@ -1,0 +1,11 @@
+[workspace]
+members = ["crates/*"]
+resolver = "2"
+
+[workspace.package]
+edition = "2021"
+version = "1.0.0"
+authors = ["Snake <snakeprotocolsolana@gmail.com>"]
+license = "Apache-2.0"
+repository = "https://github.com/snakeprotocol/snakeprotocol
+description = "An AI agent"
